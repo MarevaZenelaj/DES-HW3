@@ -4,7 +4,7 @@ class Entity:
 
     def __init__(self):
         self.target = None
-
+        self.type = 'Entity'
     def set_target(self,target):
         self.target = target
 
@@ -13,7 +13,6 @@ class DisplaceEntity(Entity):
 
     def __init__(self, From, to):
         super().__init__()
-        self.taget = None
         self.From = From                  #cabbages_on_shelf
         self.to = to                      #cabbage_reorder_proc
         self.firstchoice = None
@@ -46,7 +45,6 @@ class AdvanceTimeUniformDistribution(Entity):
         self.type = 'cabbageAdvanced'
         self.low = low
         self.high = high
-        self.target = None
 
     def set_target(self, target):
         self.target = target
@@ -62,8 +60,7 @@ class GenerateEntityUniformDistribution(Entity):
         self.low = low
         self.high = high
         self.type = 'CustEntry'
-        self.target = None
-
+        
     def set_target(self, target):
         self.target = target
         
@@ -143,15 +140,16 @@ class Simulation(Entity):
         self.future_event_list.append(next_event[0].target, self.clock)
         
     def run(self, stop_after):
-        while(len(self.future_event_list)!=0 and stop_after[0].count()<=stop_after[1]):
-            print(self.future_event_list, self.clock)
+        counterr = 0
+        while(len(self.future_event_list)!=0 and stop_after[0].count()<=stop_after[1]):      
             self.future_event_list.sort(key=lambda x: x[1])
             next_event = self.future_event_list[0]
+            print(next_event)
             del self.future_event_list[0]
             #print(f'processing event {next_event[0].type} at time {self.clock}')
             self.clock = next_event[1]
             if(next_event[0].type == 'CustEntry'):
-                print('entered')
+                print('customer entered')
                 self.process_entry_event(next_event)
             elif(next_event[0].type == 'Counter'):
                 self.process_counter_event(next_event)
@@ -163,5 +161,5 @@ class Simulation(Entity):
                 self.advanceTimeCabbage(next_event)
             elif(next_event[0].type == 'Displacement'):
                 self.get_cabbages_displacement(next_event)
-
+            counterr += 1
 

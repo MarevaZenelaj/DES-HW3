@@ -38,12 +38,28 @@ class GenerateAtStart(Entity):
         self.target = target
 
 
-class AdvanceTimeUniformDistribution(Entity):
+class AdvanceTimeUniformDistributionRotten(Entity):
 
     def __init__(self, low, high):
         super().__init__()
         self.count = 0
-        self.type = 'cabbageAdvanced'
+        self.type = 'cabbageRotten'
+        self.low = low
+        self.high = high
+
+    def set_target(self, target):
+        self.target = target
+
+    def return_random(self):
+        return randint(self.low, self.high)
+
+
+class AdvanceTimeUniformDistributionReordered(Entity):
+
+    def __init__(self, low, high):
+        super().__init__()
+        self.count = 0
+        self.type = 'cabbageArrived'
         self.low = low
         self.high = high
 
@@ -110,8 +126,14 @@ class Simulation:
         self.future_event_list = []
         self.future_event_list.append((self.firstcustomer, self.clock + self.firstcustomer.returnrand()))
 
-    def advance_time_cabbage(self, next_event):
-        self.future_event_list.append((next_event[0].target, self.clock))
+    def process_cabbage_rotten(self, next_event):
+        print("entered")
+        self.stock -= 1
+        next_event[0].target.count += 1
+        print(next_event[0].target.type)
+
+    def process_cabbage_arrived(self, next_event):
+        self.stock += 1
 
     def process_entry_event(self, next_event):
         self.future_event_list.append((next_event[0].target, self.clock))
@@ -143,7 +165,7 @@ class Simulation:
         counterr = 0
         tobeconditioned = stop_after[0].count()
         limit = stop_after[1]
-        while len(self.future_event_list) != 0 and tobeconditioned <= limit:
+        while len(self.future_event_list) != 0 and tobeconditioned < limit:
             self.future_event_list.sort(key=lambda x: x[1])
             next_event = self.future_event_list[0]
             if next_event[0] is None:
@@ -152,32 +174,40 @@ class Simulation:
             del self.future_event_list[0]
             self.clock = next_event[1]
             #print(f'processing event {next_event[0].type} at time {self.clock}')
+
             if next_event[0].type == 'CustEntry':
                 self.process_entry_event(next_event)
+
             elif next_event[0].type == 'Counter':
                 self.process_counter_event(next_event)
+
             elif next_event[0].type == 'Termination':
                 self.process_termination_event(next_event)
+
             elif next_event[0].type == 'cabbageGeneration':
                 self.process_entry_cabbage(next_event)
-            elif next_event[0].type == 'cabbageAdvanced':
-                self.advance_time_cabbage(next_event)
+
+            elif next_event[0].type == 'cabbageRotten':
+                print("entered")
+                self.process_cabbage_rotten(next_event)
+
+            elif next_event[0].type == 'cabbageArrived':
+                self.process_cabbage_arrived(next_event)
+
             elif next_event[0].type == 'Displacement':
                 self.get_cabbages_displacement(next_event)
+
             tobeconditioned = stop_after[0].count()
             counterr += 1
-
-            if counterr > 5000:
-                break
 
 
 first_cabbages = GenerateAtStart(num=3)
 
-cabbages_on_shelf = AdvanceTimeUniformDistribution(low=7, high=12)
+cabbages_on_shelf = AdvanceTimeUniformDistributionRotten(low=7, high=12)
 
 cabbage_rotten_cntr = EntityCounter()
 
-cabbage_reorder_proc = AdvanceTimeUniformDistribution(low=1, high=15)
+cabbage_reorder_proc = AdvanceTimeUniformDistributionReordered(low=1, high=15)
 
 first_cabbages.set_target(cabbages_on_shelf)
 
